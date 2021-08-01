@@ -1,0 +1,10 @@
+{
+    "name": "Ramat Gan Covid19",
+    "version": "0.0.0.5",
+    "description": "Ramat gan Covid 19 extension",
+    "manifest_version": 3,
+    "content_scripts": [{
+        "matches": ["https://www.ramat-gan.muni.il/*"],
+        "js": ["get-data.js"]        
+    }]
+  }
