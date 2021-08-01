@@ -155,10 +155,16 @@ const addComboAndDisclaimersToDashboard = () => {
   selectBox.onchange = () => showValues(selectBox.value);
 };
 
+const validateData = neighborhoods => {
+  return neighborhoods?.length > 0 && 
+    neighborhoods.map(n => n.Value).reduce((prev, current) => prev + current, 0) > 0;
+
+}
+
 const getData = async () => {
 
   neighborhoods = await loadData();
-  if (!neighborhoods?.length) {
+  if (!validateData(neighborhoods)) {
     return;
   }
 
