@@ -5,7 +5,7 @@ This is a chrome extension that adds some features to Ramat Gan Municipality Cov
 
 ## Run localy
 
-1. Clone this project by ``git clone https://gitlab.com/RanWahle/rg-covid19-chrome-extension.git``
+1. Clone this project by ``git clone https://github.com/RanWahle/rg-covid19-chrome-extension.git``
 2. Open Chrome
 3. Go to chrome://extensions
 4. Enable developer mode
