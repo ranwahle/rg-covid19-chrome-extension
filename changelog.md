@@ -1,3 +1,6 @@
+# Version 0.0.6 
+Add some data avalidation
+
 # Version 0.0.5
 Correct neighborhood population mistakes
 
