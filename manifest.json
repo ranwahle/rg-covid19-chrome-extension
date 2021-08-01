@@ -1,6 +1,6 @@
 {
     "name": "Ramat Gan Covid19",
-    "version": "0.0.0.5",
+    "version": "0.0.0.6",
     "description": "Ramat gan Covid 19 extension",
     "manifest_version": 3,
     "content_scripts": [{
