@@ -29,35 +29,43 @@ const neighborhoodPopulation = [
   { name: "רמת אפעל", value: 3272 },
   { name: 'כפר אז"ר', value: 488 },
 ];
+let neighborhoods;
+
 const loadData = async () => {
-  const response = await fetch(
-    "https://www.ramat-gan.muni.il/covid19/__svws__/SvService.asmx/GetCovidData",
-    {
-      headers: {
-        accept: "application/json, text/javascript, */*; q=0.01",
-        "accept-language":
-          "en,he;q=0.9,ar;q=0.8,en-GB;q=0.7,en-US;q=0.6,es;q=0.5,fr;q=0.4",
-        "cache-control": "no-cache",
-        "content-type": "application/json; charset=utf-8",
-        pragma: "no-cache",
-        "sec-ch-ua":
-          '"Chromium";v="88", "Google Chrome";v="88", ";Not A Brand";v="99"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-        "x-requested-with": "XMLHttpRequest",
-      },
-      body: null,
-      method: "POST",
-    }
-  );
-  const rawData = await response.json();
+  try {
+    const response = await fetch(
+      "https://www.ramat-gan.muni.il/covid19/__svws__/SvService.asmx/GetCovidData",
+      {
+        headers: {
+          accept: "application/json, text/javascript, */*; q=0.01",
+          "accept-language":
+            "en,he;q=0.9,ar;q=0.8,en-GB;q=0.7,en-US;q=0.6,es;q=0.5,fr;q=0.4",
+          "cache-control": "no-cache",
+          "content-type": "application/json; charset=utf-8",
+          pragma: "no-cache",
+          "sec-ch-ua":
+            '"Chromium";v="88", "Google Chrome";v="88", ";Not A Brand";v="99"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-origin",
+          "x-requested-with": "XMLHttpRequest",
+        },
+        body: null,
+        method: "POST",
+      }
+    );
+    const rawData = await response.json();
 
-  const neighborhoods = rawData.d.ActiveCasesByNeighborhoodStatistics;
+    const neighborhoods = rawData.d.ActiveCasesByNeighborhoodStatistics;
 
-  return neighborhoods;
+    return neighborhoods;
+  }
+  catch (err) {
+    return [];
+  }
 };
+
 const activeCases = "מקרים פעילים";
 const aDatBefore = "שינוי יום קודם";
 const addOption = (text, value) => {
@@ -67,9 +75,69 @@ const addOption = (text, value) => {
   return option;
 };
 
-const getData = async () => {
+const findNumberElements = (elements) => {
+  return Array.from(elements).map((element) => {
+    const id = element.getAttribute("data-neighborhood");
+
+    const neighborhood = neighborhoods.find((n) => n.ID === +id);
+
+    const span = element.querySelector('text[font-size="20"] tspan');
+
+    return { span, neighborhood };
+  });
+};
+
+const neighborhoodsElements = document.querySelectorAll(
+  "g[data-neighborhood]"
+);
+
+const showValuesPerPopulation = () => {
+  const tupples = findNumberElements(neighborhoodsElements);
+  tupples.forEach(({ span, neighborhood }) => {
+    const singleNeighborhoodPopulation = neighborhoodPopulation.find(
+      (n) => n.name === neighborhood.Name
+    );
+
+    const newValue = singleNeighborhoodPopulation
+      ? Math.round(
+        (neighborhood.Value * 1000) / singleNeighborhoodPopulation.value
+      )
+      : "?";
+    span.textContent = `${newValue}`;
+  });
+};
+
+const showValue = () => {
+  //  li.textContent = activeCases;
+  const tupples = findNumberElements(neighborhoodsElements);
+  tupples.forEach(({ span, neighborhood }) => {
+    span.textContent = `${neighborhood.Value}`;
+  });
+};
+
+
+const showDelta = async () => {
+  const tupples = findNumberElements(neighborhoodsElements);
+  tupples.forEach(({ span, neighborhood }) => {
+    const newValue =
+      neighborhood.Delta > 0 ? `+${neighborhood.Delta}` : neighborhood.Delta;
+    span.textContent = newValue;
+  });
+};
+
+const selectCasesDict = {
+  casesDelta: showDelta,
+  activeCasesPerPopulation: showValuesPerPopulation,
+  activeCases: showValue,
+};
+
+const showValues = (value) => {
+  selectCasesDict[value]();
+};
+
+const addComboAndDisclaimersToDashboard = () => {
   document.querySelector('.neighborhood-map_text').style.textAlign = 'right';
-  document.querySelector('.neighborhood-map_text span').textContent += ' נתוני אוכלוסיית השכונות נלקחו מאתר הלשכה המרכזית לסטטיסטיקה'
+  document.querySelector('.neighborhood-map_text span').textContent += ' נתוני אוכלוסיית השכונות נלקחו מאתר הלשכה המרכזית לסטטיסטיקה';
   const bar = document.querySelector("ul.piotabs-list");
 
   const li = document.createElement("li");
@@ -85,67 +153,19 @@ const getData = async () => {
   bar.appendChild(li);
 
   selectBox.onchange = () => showValues(selectBox.value);
+};
 
-  const neighborhoods = await loadData();
+const getData = async () => {
 
-  const neighborhoodsElements = document.querySelectorAll(
-    "g[data-neighborhood]"
-  );
+  neighborhoods = await loadData();
+  if (!neighborhoods?.length) {
+    return;
+  }
 
-  const showValuesPerPopulation = () => {
-    const tupples = findNumberElements(neighborhoodsElements);
-    tupples.forEach(({ span, neighborhood }) => {
-      const singleNeighborhoodPopulation = neighborhoodPopulation.find(
-        (n) => n.name === neighborhood.Name
-      );
+  addComboAndDisclaimersToDashboard();
 
-      const newValue = singleNeighborhoodPopulation
-        ? Math.round(
-            (neighborhood.Value * 1000) / singleNeighborhoodPopulation.value
-          )
-        : "?";
-      span.textContent = `${newValue}`;
-    });
-  };
-
-  const showValue = () => {
-    //  li.textContent = activeCases;
-    const tupples = findNumberElements(neighborhoodsElements);
-    tupples.forEach(({ span, neighborhood }) => {
-      span.textContent = `${neighborhood.Value}`;
-    });
-  };
-
-  const findNumberElements = (elements) => {
-    return Array.from(elements).map((element) => {
-      const id = element.getAttribute("data-neighborhood");
-
-      const neighborhood = neighborhoods.find((n) => n.ID === +id);
-
-      const span = element.querySelector('text[font-size="20"] tspan');
-
-      return { span, neighborhood };
-    });
-  };
-
-  const showDelta = async () => {
-    const tupples = findNumberElements(neighborhoodsElements);
-    tupples.forEach(({ span, neighborhood }) => {
-      const newValue =
-        neighborhood.Delta > 0 ? `+${neighborhood.Delta}` : neighborhood.Delta;
-      span.textContent = newValue;
-    });
-  };
-
-  const selectCasesDict = {
-    casesDelta: showDelta,
-    activeCasesPerPopulation: showValuesPerPopulation,
-    activeCases: showValue,
-  };
-
-  const showValues = (value) => {
-    selectCasesDict[value]();
-  };
 };
 
 getData();
+
+
